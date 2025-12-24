@@ -1,0 +1,39 @@
+{
+  "name": "FastAPI Boilerplate - Dev Container",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "../docker-compose.dev.yml"
+  ],
+  "service": "web",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "app",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "njpwerner.autodocstring",
+        "ms-python.black-formatter"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "python.analysis.typeCheckingMode": "basic",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+
+  "postCreateCommand": "cp .env.example src/.env || true",
+  "postStartCommand": "uv sync --no-editable || true",
+
+  "forwardPorts": [8000, 5432, 6379],
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+  }
+}

@@ -91,6 +91,21 @@ make dev
 - API Docs: http://127.0.0.1:8000/docs
 - Admin Panel: http://127.0.0.1:8000/admin
 
+### 🧑‍💻 Develop with VS Code DevContainer
+
+You can open this project in a VS Code DevContainer to get a reproducible developer environment with the app and services started automatically.
+
+1. Install the "Remote - Containers" extension in VS Code.
+2. Open the repository in VS Code and choose "Reopen in Container" when prompted.
+
+What the DevContainer does:
+- Uses the project's development compose (`docker-compose.dev.yml`) and attaches to the `web` service
+- Copies `.env.example` to `src/.env` on creation (no secrets are provided)
+- Installs project dependencies via `uv sync` if available
+- Forwards ports 8000 (web), 5432 (Postgres), and 6379 (Redis)
+
+You can then run `make dev` (inside or outside the container) or use the Docker Compose commands described above.
+
 ### 📋 Available Commands
 
 ```bash
