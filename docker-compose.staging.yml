@@ -1,0 +1,33 @@
+# Staging environment override
+# Production-like setup for testing with Gunicorn managing Uvicorn workers
+
+services:
+  web:
+    # Use Gunicorn with multiple Uvicorn workers
+    command: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    # Remove source code mounting in staging (use image code)
+    volumes:
+      - ./src/.env:/code/.env
+
+  worker:
+    # Remove source code mounting in staging
+    volumes:
+      - ./src/.env:/code/.env
+
+  # Optional: Initialize database with superuser
+  create_superuser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./src/.env
+    depends_on:
+      - db
+      - web
+    command: python -m src.scripts.create_first_superuser
+    volumes:
+      - ./src:/code/src
+    profiles:
+      - init

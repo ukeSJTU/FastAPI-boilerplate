@@ -76,85 +76,99 @@ git clone https://github.com/<you>/FastAPI-boilerplate
 cd FastAPI-boilerplate
 ```
 
-**Quick setup:** Run the interactive setup script to choose your deployment configuration:
+### 🚀 Quick Start (Development)
 
 ```bash
-./setup.py
-```
+# Copy environment configuration
+cp .env.example src/.env
 
-Or directly specify the deployment type: `./setup.py local`, `./setup.py staging`, or `./setup.py production`.
-
-The script copies the right files for your deployment scenario. Here's what each option sets up:
-
-### Option 1: Local development with Uvicorn
-
-Best for: **Development and testing**
-
-**Copies:**
-
-- `scripts/local_with_uvicorn/Dockerfile` → `Dockerfile`
-- `scripts/local_with_uvicorn/docker-compose.yml` → `docker-compose.yml`
-- `scripts/local_with_uvicorn/.env.example` → `src/.env`
-
-Sets up Uvicorn with auto-reload enabled. The example environment values work fine for development.
-
-**Manual setup:** `./setup.py local` or copy the files above manually.
-
-### Option 2: Staging with Gunicorn managing Uvicorn workers
-
-Best for: **Staging environments and load testing**
-
-**Copies:**
-
-- `scripts/gunicorn_managing_uvicorn_workers/Dockerfile` → `Dockerfile`
-- `scripts/gunicorn_managing_uvicorn_workers/docker-compose.yml` → `docker-compose.yml`
-- `scripts/gunicorn_managing_uvicorn_workers/.env.example` → `src/.env`
-
-Sets up Gunicorn managing multiple Uvicorn workers for production-like performance testing.
-
-> [!WARNING]
-> Change `SECRET_KEY` and passwords in the `.env` file for staging environments.
-
-**Manual setup:** `./setup.py staging` or copy the files above manually.
-
-### Option 3: Production with NGINX
-
-Best for: **Production deployments**
-
-**Copies:**
-
-- `scripts/production_with_nginx/Dockerfile` → `Dockerfile`
-- `scripts/production_with_nginx/docker-compose.yml` → `docker-compose.yml`
-- `scripts/production_with_nginx/.env.example` → `src/.env`
-
-Sets up NGINX as reverse proxy with Gunicorn + Uvicorn workers for production.
-
-> [!CAUTION]
-> You MUST change `SECRET_KEY`, all passwords, and sensitive values in the `.env` file before deploying!
-
-**Manual setup:** `./setup.py production` or copy the files above manually.
-
----
-
-**Start your application:**
-
-```bash
-docker compose up
+# Start development environment with hot-reload
+make dev
 ```
 
 **Access your app:**
-- **Local**: http://127.0.0.1:8000 (auto-reload enabled) → [API docs](http://127.0.0.1:8000/docs)
-- **Staging**: http://127.0.0.1:8000 (production-like performance)
-- **Production**: http://localhost (NGINX reverse proxy)
+- API: http://127.0.0.1:8000
+- API Docs: http://127.0.0.1:8000/docs
+- Admin Panel: http://127.0.0.1:8000/admin
 
-### Next steps
+### 📋 Available Commands
 
-**Create your first admin user:**
 ```bash
-docker compose run --rm create_superuser
+make dev       # Development mode (Uvicorn with hot-reload)
+make staging   # Staging mode (Gunicorn + Uvicorn workers)
+make prod      # Production mode (with NGINX reverse proxy)
+make down      # Stop all containers
+make test      # Run tests
+make init      # Initialize database (create superuser & tier)
+make logs      # View container logs
 ```
 
-**Run database migrations** (if you add models):
+### 🔧 Environment-Specific Setup
+
+#### Development (Default)
+**Best for:** Local development and testing
+
+```bash
+make dev
+# or
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+**Features:**
+- Uvicorn with auto-reload
+- Source code mounted for hot-reload
+- Runs on port 8000
+
+#### Staging
+**Best for:** Pre-production testing and load testing
+
+```bash
+make staging
+# or
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up
+```
+
+**Features:**
+- Gunicorn managing multiple Uvicorn workers
+- Production-like performance
+- Source code not mounted (uses image code)
+
+> [!WARNING]
+> Change `SECRET_KEY` and passwords in `src/.env` for staging environments.
+
+#### Production
+**Best for:** Production deployments
+
+```bash
+make prod
+# or
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+**Features:**
+- NGINX reverse proxy
+- Gunicorn + Uvicorn workers
+- Runs on port 80
+- Automatic restart policies
+
+> [!CAUTION]
+> You MUST change `SECRET_KEY`, all passwords, and sensitive values in `src/.env` before deploying!
+> Generate new secret key: `openssl rand -hex 32`
+
+
+### 🎯 Next Steps
+
+**Initialize database with superuser and tier:**
+```bash
+make init
+```
+
+**Run tests:**
+```bash
+make test
+```
+
+**Run database migrations** (when you add/modify models):
 ```bash
 cd src && uv run alembic revision --autogenerate && uv run alembic upgrade head
 ```
@@ -164,36 +178,94 @@ cd src && uv run alembic revision --autogenerate && uv run alembic upgrade head
 curl -X POST 'http://127.0.0.1:8000/api/v1/tasks/task?message=hello'
 ```
 
-**Or run locally without Docker:**
+**Run locally without Docker:**
 ```bash
 uv sync && uv run uvicorn src.app.main:app --reload
 ```
 
-> Full setup (from-scratch, .env examples, PostgreSQL & Redis, gunicorn, nginx) lives in the [docs](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/installation/).
+> Full documentation: [https://benavlabs.github.io/FastAPI-boilerplate/](https://benavlabs.github.io/FastAPI-boilerplate/)
 
-## Configuration (minimal)
+---
 
-Create `src/.env` and set **app**, **database**, **JWT**, and **environment** settings. See the [docs](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/) for a copy-pasteable example and production guidance.
+## Configuration
 
-[https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/)
+The boilerplate uses environment variables for configuration. See `.env.example` for all available options.
 
-* `ENVIRONMENT=local|staging|production` controls API docs exposure
-* Set `ADMIN_*` to enable the first admin user
-
-## Common tasks
+**Key settings to configure:**
 
 ```bash
-# run locally with reload (without Docker)
-uv sync && uv run uvicorn src.app.main:app --reload
+# Application
+APP_NAME="My FastAPI App"
+ENVIRONMENT="local"  # local, staging, production
 
-# run Alembic migrations
-cd src && uv run alembic revision --autogenerate && uv run alembic upgrade head
+# Database
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="changeme123"
+POSTGRES_DB="postgres"
 
-# enqueue a background job (example endpoint)
-curl -X POST 'http://127.0.0.1:8000/api/v1/tasks/task?message=hello'
+# Security (REQUIRED for production)
+SECRET_KEY="generate-with-openssl-rand-hex-32"
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+# Admin
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="!Ch4ng3Th1sP4ssW0rd!"
 ```
 
-More examples (superuser creation, tiers, rate limits, admin usage) in the [docs](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/first-run/).
+Full configuration guide: [https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/)
+
+---
+
+## Project Structure
+
+```
+FastAPI-boilerplate/
+├── docker-compose.yml          # Base configuration
+├── docker-compose.dev.yml      # Development overrides
+├── docker-compose.staging.yml  # Staging overrides
+├── docker-compose.prod.yml     # Production overrides
+├── Dockerfile                  # Multi-stage build
+├── Makefile                    # Convenience commands
+├── .env.example               # Environment variables template
+├── src/
+│   ├── app/
+│   │   ├── main.py            # FastAPI application
+│   │   ├── api/               # API routes
+│   │   ├── core/              # Config, security, DB
+│   │   ├── crud/              # Database operations
+│   │   ├── models/            # SQLAlchemy models
+│   │   ├── schemas/           # Pydantic schemas
+│   │   └── admin/             # Admin panel (optional)
+│   └── migrations/            # Alembic migrations
+└── tests/                     # Test suite
+```
+
+More details: [https://benavlabs.github.io/FastAPI-boilerplate/user-guide/project-structure/](https://benavlabs.github.io/FastAPI-boilerplate/user-guide/project-structure/)
+
+---
+
+## Common Tasks
+
+```bash
+# Development
+make dev              # Start dev environment
+make logs             # View logs
+make down             # Stop containers
+
+# Database
+make init             # Create superuser and tier
+make db-shell         # PostgreSQL shell
+cd src && uv run alembic revision --autogenerate  # Create migration
+cd src && uv run alembic upgrade head              # Apply migrations
+
+# Testing
+make test             # Run test suite
+
+# Production
+make prod             # Deploy with NGINX
+```
+
+More examples: [https://benavlabs.github.io/FastAPI-boilerplate/getting-started/first-run/](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/first-run/)
 
 ## Contributing
 

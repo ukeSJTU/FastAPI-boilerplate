@@ -1,0 +1,38 @@
+# Production environment override
+# Full production setup with NGINX reverse proxy and optimized security
+
+services:
+  web:
+    # Use Gunicorn with multiple Uvicorn workers
+    command: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+    # Expose port internally (NGINX will proxy)
+    expose:
+      - "8000"
+    # Remove all volume mounts in production (use image code only)
+    volumes: []
+    restart: unless-stopped
+
+  worker:
+    # Remove all volume mounts in production
+    volumes: []
+    restart: unless-stopped
+
+  db:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  # NGINX reverse proxy for production
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      # Uncomment for SSL/TLS certificates
+      # - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - web
+    restart: unless-stopped

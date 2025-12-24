@@ -1,0 +1,69 @@
+# Development environment override
+# Optimized for local development with hot-reload and debugging
+
+services:
+  web:
+    # Use Uvicorn with auto-reload for development
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    # Enable hot-reload by mounting source code
+    volumes:
+      - ./src/app:/code/app
+      - ./src/.env:/code/.env
+
+  worker:
+    # Keep source code mounted for hot-reload
+    volumes:
+      - ./src/app:/code/app
+      - ./src/.env:/code/.env
+
+  # Optional services for development
+
+  # Create first superuser automatically on startup
+  create_superuser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./src/.env
+    depends_on:
+      - db
+      - web
+    command: python -m src.scripts.create_first_superuser
+    volumes:
+      - ./src:/code/src
+    profiles:
+      - init
+
+  # Run tests in isolated container
+  pytest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./src/.env
+    depends_on:
+      - db
+      - redis
+    command: python -m pytest ./tests -v
+    volumes:
+      - .:/code
+    profiles:
+      - test
+
+  # Create first tier for rate limiting
+  create_tier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./src/.env
+    depends_on:
+      - db
+      - web
+    command: python -m src.scripts.create_first_tier
+    volumes:
+      - ./src:/code/src
+    profiles:
+      - init
